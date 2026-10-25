@@ -1,0 +1,9 @@
+[package]
+name = "bot-source-code"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+dotenv = "*"
+serenity = "*"
+tokio = { version = "1.21.2", features = ["macros", "rt-multi-thread"] }
