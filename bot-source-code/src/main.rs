@@ -1,7 +1,9 @@
 use dotenv::dotenv;
+use serenity::all::Embed;
 use std::env;
 
 use serenity::async_trait;
+use serenity::builder::{CreateEmbed, CreateMessage};
 use serenity::model::channel::Message;
 use serenity::prelude::*;
 
@@ -13,6 +15,16 @@ impl EventHandler for Handler {
         if msg.content == "!ping" {
             if let Err(why) = msg.channel_id.say(&ctx.http, "Pong!").await {
                 println!("Error sending message: {why:?}");
+            }
+        }
+
+        if msg.content == "!embed" {
+            let embed = CreateEmbed::new().title("Test").description("Test1");
+
+            let message = CreateMessage::new().embed(embed);
+
+            if let Err(why) = msg.channel_id.send_message(&ctx.http, message).await {
+                println!("Error sending embed: {why:?}");
             }
         }
     }
