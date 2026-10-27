@@ -1,9 +1,8 @@
 // ----- Serenity Imports -----
-use serenity::all::{ChannelId, Context, GuildId, Ready, Role, RoleId};
+use serenity::all::{Context, GuildId};
 use serenity::builder::{CreateEmbed, CreateMessage};
 
 // ----- Rust Imports -----
-use std::collections::HashMap;
 
 // ----- Internal Imports -----
 use crate::discord_api_requests::DiscordAPIRequests;

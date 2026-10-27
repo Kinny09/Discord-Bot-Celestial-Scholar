@@ -1,13 +1,13 @@
 // ----- Library Imports -----
 use dotenv::dotenv;
-use std::{env, string};
+use std::env;
 
 // ----- Serenity Imports -----
 use serenity::all::GatewayIntents;
-use serenity::all::{ChannelId, Context, GuildId, Ready, Role};
+use serenity::all::{ChannelId, Context, Ready};
+use serenity::async_trait;
 use serenity::model::channel::Message;
 use serenity::prelude::*;
-use serenity::{async_trait, client};
 
 // ----- Internal Imports -----
 mod discord_api_requests;
@@ -33,12 +33,6 @@ impl EventHandler for Handler {
             }
         }
     }
-
-    // async fn cache_ready(&self, ctx: Context, guilds: Vec<GuildId>) {
-    //     println!("Test");
-    //     println!("{:?}", guilds.get(0));
-    //     FactionMemberCounter::get_member_counts(&ctx, guilds[0]);
-    // }
 
     async fn ready(&self, ctx: Context, ready: Ready) {
         let guild_id = ready.guilds[0].id;

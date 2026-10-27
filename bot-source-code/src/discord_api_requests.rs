@@ -1,6 +1,5 @@
 // ----- Serenity Imports -----
-use serenity::all::{ChannelId, Context, GuildId, Ready, Role, RoleId};
-use serenity::builder::{CreateEmbed, CreateMessage};
+use serenity::all::{Context, GuildId, RoleId};
 
 // ----- Rust Imports -----
 use std::collections::HashMap;
