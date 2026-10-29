@@ -96,7 +96,7 @@ async fn update_faction_counter(ctx: Context, ready: Ready) {
             )
             .await
         {
-            eprintln!("Failed to send startup message: {error}");
+            eprintln!("Failed to edit faction counter message: {error}");
         }
     } else {
         println!("Message does not exist");
@@ -109,7 +109,7 @@ async fn update_faction_counter(ctx: Context, ready: Ready) {
             )
             .await
         {
-            eprintln!("Failed to send startup message: {error}");
+            eprintln!("Failed to send new faction counter message: {error}");
         }
     }
 }
