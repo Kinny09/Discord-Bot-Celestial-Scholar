@@ -1,23 +1,62 @@
+// ----- Library Imports -----
 use dotenv::dotenv;
 use std::env;
 
+// ----- Serenity Imports -----
+use serenity::all::GatewayIntents;
+use serenity::all::{ChannelId, Context, Ready, RoleId};
 use serenity::async_trait;
-use serenity::model::channel::Message;
 use serenity::prelude::*;
+use tokio::time;
 
+// ----- Internal Imports -----
+mod faction_member_counter;
+use faction_member_counter::FactionMemberCounter;
+
+// -------------------------------
+// ---------- Constants ----------
+// -------------------------------
+// For now these are constants for debugging, but eventually all these variables will be imported from a .config file
+const FACTION_COUNT_CHANNEL_ID: ChannelId = ChannelId::new(1564657237023129650);
+const ROLES_TO_KEEP_TRACK_OF: &[&RoleId] = &[&RoleId::new(1565349971035693216)];
+const FACTION_COUNTER_UPDATE_INTERVAL_HOURS: u64 = 5;
+
+// ---------------------------------------
+// ---------- The event handler ----------
+// ---------------------------------------
 struct Handler;
 
 #[async_trait]
 impl EventHandler for Handler {
-    async fn message(&self, ctx: Context, msg: Message) {
-        if msg.content == "!ping" {
-            if let Err(why) = msg.channel_id.say(&ctx.http, "Pong!").await {
-                println!("Error sending message: {why:?}");
-            }
+    // async fn message(&self, ctx: Context, msg: Message) {
+    //     if msg.content == "!ping" {
+    //         if let Err(why) = msg.channel_id.say(&ctx.http, "Pong!").await {
+    //             println!("Error sending message: {why:?}");
+    //         }
+    //     }
+    // }
+
+    async fn ready(&self, ctx: Context, ready: Ready) {
+        let mut faction_counter_update_interval = time::interval(time::Duration::from_hours(
+            FACTION_COUNTER_UPDATE_INTERVAL_HOURS,
+        ));
+
+        loop {
+            faction_counter_update_interval.tick().await;
+            FactionMemberCounter::update_faction_counter(
+                ctx.clone(),
+                ready.clone(),
+                FACTION_COUNT_CHANNEL_ID,
+                ROLES_TO_KEEP_TRACK_OF,
+            )
+            .await;
         }
     }
 }
 
+// ---------------------------------------
+// ---------- The main functiion ---------
+// ---------------------------------------
 #[tokio::main]
 async fn main() {
     // Read the enviromental file
@@ -28,7 +67,8 @@ async fn main() {
     // Set gateway intents, which decides what events the bot will be notified about
     let intents = GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::DIRECT_MESSAGES
-        | GatewayIntents::MESSAGE_CONTENT;
+        | GatewayIntents::MESSAGE_CONTENT
+        | GatewayIntents::GUILD_MEMBERS;
 
     // Create a new instance of the Client, logging in as a bot.
     let mut client = Client::builder(&token, intents)
