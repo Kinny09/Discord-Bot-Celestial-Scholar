@@ -4,12 +4,11 @@ use std::env;
 
 // ----- Serenity Imports -----
 use serenity::all::GatewayIntents;
-use serenity::all::{ChannelId, Context, CreateMessage, EditMessage, GetMessages, Ready, RoleId};
+use serenity::all::{ChannelId, Context, Ready, RoleId};
 use serenity::async_trait;
 use serenity::prelude::*;
 
 // ----- Internal Imports -----
-mod discord_api_requests;
 mod faction_member_counter;
 use faction_member_counter::FactionMemberCounter;
 
@@ -73,60 +72,3 @@ async fn main() {
         println!("Client error: {why:?}");
     }
 }
-
-// ------------------------------------
-// ---------- Other Functions ---------
-// ------------------------------------
-
-// /// Updated the faction counter in the faction counter channel. Will edit the counter message if it exists, if not, it will post a new message.
-// async fn update_faction_counter(ctx: Context, ready: Ready) {
-//     let bot_id = ctx.cache.current_user().id;
-//     let guild_id = ready.guilds[0].id;
-//
-//     let most_recent_message_in_faction_counter_channel = FACTION_COUNT_CHANNEL_ID
-//         .messages(&ctx.http, GetMessages::new().limit(1))
-//         .await
-//         .unwrap();
-//
-//     if most_recent_message_in_faction_counter_channel.len() > 0
-//         && most_recent_message_in_faction_counter_channel[0].author.id == bot_id
-//     {
-//         // Edits the message embed if it exists
-//         let message_id = most_recent_message_in_faction_counter_channel[0].id;
-//         if let Err(error) = FACTION_COUNT_CHANNEL_ID
-//             .edit_message(
-//                 &ctx.http,
-//                 message_id,
-//                 EditMessage::new().embed(
-//                     FactionMemberCounter::create_faction_counter_embed(
-//                         &ctx,
-//                         guild_id,
-//                         ROLES_TO_KEEP_TRACK_OF,
-//                     )
-//                     .await,
-//                 ),
-//             )
-//             .await
-//         {
-//             eprintln!("Failed to edit faction counter message: {error}");
-//         }
-//     } else {
-//         // Posts a new message with an embed if it dosen't already exist
-//         if let Err(error) = FACTION_COUNT_CHANNEL_ID
-//             .send_message(
-//                 &ctx.http,
-//                 CreateMessage::new().embed(
-//                     FactionMemberCounter::create_faction_counter_embed(
-//                         &ctx,
-//                         guild_id,
-//                         ROLES_TO_KEEP_TRACK_OF,
-//                     )
-//                     .await,
-//                 ),
-//             )
-//             .await
-//         {
-//             eprintln!("Failed to send new faction counter message: {error}");
-//         }
-//     }
-// }
