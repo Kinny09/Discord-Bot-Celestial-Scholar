@@ -3,8 +3,11 @@ use dotenv::dotenv;
 use std::env;
 
 // ----- Serenity Imports -----
-use serenity::all::GatewayIntents;
-use serenity::all::{ChannelId, Context, Ready, RoleId};
+// use serenity::all::{Channel, GatewayIntents};
+use serenity::all::{
+    ChannelId, Context, CreateMessage, GatewayIntents, GuildId, Member, Mention, Ready, RoleId,
+    User,
+};
 use serenity::async_trait;
 use serenity::prelude::*;
 use tokio::time;
@@ -17,9 +20,16 @@ use faction_member_counter::FactionMemberCounter;
 // ---------- Constants ----------
 // -------------------------------
 // For now these are constants for debugging, but eventually all these variables will be imported from a .config file
+// Faction counting
 const FACTION_COUNT_CHANNEL_ID: ChannelId = ChannelId::new(1564657237023129650);
 const ROLES_TO_KEEP_TRACK_OF: &[&RoleId] = &[&RoleId::new(1565349971035693216)];
 const FACTION_COUNTER_UPDATE_INTERVAL_HOURS: u64 = 5;
+
+// Member joining/leaving
+const CHANNEL_TO_SEND_JOIN_MESSAGES_TO: ChannelId = ChannelId::new(1565403260435566713);
+const CHANNEL_TO_SEND_LEAVE_MESSAGES_TO: ChannelId = ChannelId::new(1565403449502339153);
+// const JOIN_MESSAGE: &'static str =
+//     "Welcome {user_joined_mention} to Cosmoteer: The Celestial Throne, a RP/RTS server combination";
 
 // ---------------------------------------
 // ---------- The event handler ----------
@@ -35,6 +45,42 @@ impl EventHandler for Handler {
     //         }
     //     }
     // }
+    //
+    async fn guild_member_addition(&self, ctx: Context, new_member: Member) {
+        let join_message = format!(
+            "Welcome {user_joined_mention} ({username}) to Cosmoteer: The Celestial Throne, a RP/RTS server combination.",
+            user_joined_mention = Mention::from(new_member.user.id),
+            username = new_member.user.name
+        );
+
+        if let Err(why) = CHANNEL_TO_SEND_JOIN_MESSAGES_TO
+            .send_message(&ctx.http, CreateMessage::new().content(join_message))
+            .await
+        {
+            eprintln!("Error sending welcome message: {why:?}");
+        }
+    }
+
+    async fn guild_member_removal(
+        &self,
+        ctx: Context,
+        _guild_id: GuildId,
+        user: User,
+        _member_data_if_available: Option<Member>,
+    ) {
+        let leave_message = format!(
+            "Goodbye {user_joined_mention} ({username}) it was nice knowing you.",
+            user_joined_mention = Mention::from(user.id),
+            username = user.name
+        );
+
+        if let Err(why) = CHANNEL_TO_SEND_LEAVE_MESSAGES_TO
+            .send_message(&ctx.http, CreateMessage::new().content(leave_message))
+            .await
+        {
+            eprintln!("Error sending welcome message: {why:?}");
+        }
+    }
 
     async fn ready(&self, ctx: Context, ready: Ready) {
         let mut faction_counter_update_interval = time::interval(time::Duration::from_hours(
@@ -78,6 +124,6 @@ async fn main() {
 
     // Start listening for events by starting a single shard
     if let Err(why) = client.start().await {
-        println!("Client error: {why:?}");
+        eprintln!("Client error: {why:?}");
     }
 }
