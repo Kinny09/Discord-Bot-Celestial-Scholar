@@ -1,6 +1,7 @@
 // ----- Serenity Imports -----
-use serenity::all::{Context, GuildId};
+use serenity::all::{Context, GuildId, Timestamp};
 use serenity::builder::{CreateEmbed, CreateMessage};
+use serenity::model::timestamp;
 
 // ----- Rust Imports -----
 
@@ -14,15 +15,26 @@ use crate::discord_api_requests::DiscordAPIRequests;
 pub struct FactionMemberCounter;
 
 impl FactionMemberCounter {
-    /// Gatheres the data for, and then creates theCreates the faction member counter
+    /// Gatheres the data for, and then creates the faction member counter
     pub async fn create_faction_counter_embed(ctx: &Context, guild_id: GuildId) -> CreateEmbed {
         let role_count = DiscordAPIRequests::get_member_counts(&ctx, guild_id).await;
 
         let mut embed_description: String = String::new();
 
+        let timestamp_for_post = format!(
+            "-# Last updated on <t:{unix_timestamp}:f> which was <t:{unix_timestamp}:R>. \n",
+            unix_timestamp = Timestamp::now().unix_timestamp()
+        );
+        embed_description.push_str(&timestamp_for_post);
+
         for role in role_count.values() {
-            embed_description.push_str(&role.0.to_string());
-            embed_description.push_str(&role.1.to_string());
+            let description_for_post = format!(
+                "## {} \n
+                Current Members: {}
+                \n\n",
+                &role.0, &role.1
+            );
+            embed_description.push_str(&description_for_post)
         }
 
         let embed = CreateEmbed::new()

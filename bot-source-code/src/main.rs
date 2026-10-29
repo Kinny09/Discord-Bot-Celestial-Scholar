@@ -6,7 +6,6 @@ use std::env;
 use serenity::all::GatewayIntents;
 use serenity::all::{ChannelId, Context, CreateMessage, EditMessage, GetMessages, Ready};
 use serenity::async_trait;
-use serenity::model::channel::Message;
 use serenity::prelude::*;
 
 // ----- Internal Imports -----
@@ -35,46 +34,7 @@ impl EventHandler for Handler {
     // }
 
     async fn ready(&self, ctx: Context, ready: Ready) {
-        let bot_id = ctx.cache.current_user().id;
-        let guild_id = ready.guilds[0].id;
-        let channel_id = ChannelId::new(FACTION_COUNT_CHANNEL_ID);
-
-        let most_recent_message_in_faction_counter_channel = channel_id
-            .messages(&ctx.http, GetMessages::new().limit(1))
-            .await
-            .unwrap();
-
-        if most_recent_message_in_faction_counter_channel.len() > 0
-            && most_recent_message_in_faction_counter_channel[0].author.id == bot_id
-        {
-            println!("Message Exists");
-            let message_id = most_recent_message_in_faction_counter_channel[0].id;
-            if let Err(error) = channel_id
-                .edit_message(
-                    &ctx.http,
-                    message_id,
-                    EditMessage::new().embed(
-                        FactionMemberCounter::create_faction_counter_embed(&ctx, guild_id).await,
-                    ),
-                )
-                .await
-            {
-                eprintln!("Failed to send startup message: {error}");
-            }
-        } else {
-            println!("Message does not exist");
-            if let Err(error) = channel_id
-                .send_message(
-                    &ctx.http,
-                    CreateMessage::new().embed(
-                        FactionMemberCounter::create_faction_counter_embed(&ctx, guild_id).await,
-                    ),
-                )
-                .await
-            {
-                eprintln!("Failed to send startup message: {error}");
-            }
-        }
+        update_faction_counter(ctx, ready).await;
     }
 }
 
@@ -109,3 +69,47 @@ async fn main() {
 // ------------------------------------
 // ---------- Other Functions ---------
 // ------------------------------------
+
+/// Updated the faction counter in the faction counter channel. Will edit the counter message if it exists, if not, it will post a new message.
+async fn update_faction_counter(ctx: Context, ready: Ready) {
+    let bot_id = ctx.cache.current_user().id;
+    let guild_id = ready.guilds[0].id;
+    let channel_id = ChannelId::new(FACTION_COUNT_CHANNEL_ID);
+
+    let most_recent_message_in_faction_counter_channel = channel_id
+        .messages(&ctx.http, GetMessages::new().limit(1))
+        .await
+        .unwrap();
+
+    if most_recent_message_in_faction_counter_channel.len() > 0
+        && most_recent_message_in_faction_counter_channel[0].author.id == bot_id
+    {
+        println!("Message Exists");
+        let message_id = most_recent_message_in_faction_counter_channel[0].id;
+        if let Err(error) = channel_id
+            .edit_message(
+                &ctx.http,
+                message_id,
+                EditMessage::new().embed(
+                    FactionMemberCounter::create_faction_counter_embed(&ctx, guild_id).await,
+                ),
+            )
+            .await
+        {
+            eprintln!("Failed to send startup message: {error}");
+        }
+    } else {
+        println!("Message does not exist");
+        if let Err(error) = channel_id
+            .send_message(
+                &ctx.http,
+                CreateMessage::new().embed(
+                    FactionMemberCounter::create_faction_counter_embed(&ctx, guild_id).await,
+                ),
+            )
+            .await
+        {
+            eprintln!("Failed to send startup message: {error}");
+        }
+    }
+}
