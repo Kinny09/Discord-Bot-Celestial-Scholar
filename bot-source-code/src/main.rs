@@ -30,6 +30,7 @@ const CHANNEL_TO_SEND_JOIN_MESSAGES_TO: ChannelId = ChannelId::new(1565403260435
 const CHANNEL_TO_SEND_LEAVE_MESSAGES_TO: ChannelId = ChannelId::new(1565403449502339153);
 // const JOIN_MESSAGE: &'static str =
 //     "Welcome {user_joined_mention} to Cosmoteer: The Celestial Throne, a RP/RTS server combination";
+// Maybe use replace() to set up the ability to edit the leave/join message in the config
 
 // ---------------------------------------
 // ---------- The event handler ----------
@@ -46,6 +47,8 @@ impl EventHandler for Handler {
     //     }
     // }
     //
+
+    /// Posts a joining message when a user joins the discord
     async fn guild_member_addition(&self, ctx: Context, new_member: Member) {
         let join_message = format!(
             "Welcome {user_joined_mention} ({username}) to Cosmoteer: The Celestial Throne, a RP/RTS server combination.",
@@ -61,6 +64,7 @@ impl EventHandler for Handler {
         }
     }
 
+    /// Posts a leaving message when a user leaves the discord
     async fn guild_member_removal(
         &self,
         ctx: Context,
@@ -82,6 +86,7 @@ impl EventHandler for Handler {
         }
     }
 
+    /// Handles the updating of the faction counter at specific intervals
     async fn ready(&self, ctx: Context, ready: Ready) {
         let mut faction_counter_update_interval = time::interval(time::Duration::from_hours(
             FACTION_COUNTER_UPDATE_INTERVAL_HOURS,
