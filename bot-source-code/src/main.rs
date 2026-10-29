@@ -4,7 +4,7 @@ use std::env;
 
 // ----- Serenity Imports -----
 use serenity::all::GatewayIntents;
-use serenity::all::{ChannelId, Context, CreateMessage, EditMessage, GetMessages, Ready};
+use serenity::all::{ChannelId, Context, CreateMessage, EditMessage, GetMessages, Ready, RoleId};
 use serenity::async_trait;
 use serenity::prelude::*;
 
@@ -16,7 +16,9 @@ use faction_member_counter_embed::FactionMemberCounter;
 // -------------------------------
 // ---------- Constants ----------
 // -------------------------------
-const FACTION_COUNT_CHANNEL_ID: u64 = 1564657237023129650;
+// For now these are constants for debugging, but eventually all these variables will be imported from a .config file
+const FACTION_COUNT_CHANNEL_ID: ChannelId = ChannelId::new(1564657237023129650);
+const ROLES_TO_KEEP_TRACK_OF: &[&RoleId] = &[&RoleId::new(1565349971035693216)];
 
 // ---------------------------------------
 // ---------- The event handler ----------
@@ -74,9 +76,8 @@ async fn main() {
 async fn update_faction_counter(ctx: Context, ready: Ready) {
     let bot_id = ctx.cache.current_user().id;
     let guild_id = ready.guilds[0].id;
-    let channel_id = ChannelId::new(FACTION_COUNT_CHANNEL_ID);
 
-    let most_recent_message_in_faction_counter_channel = channel_id
+    let most_recent_message_in_faction_counter_channel = FACTION_COUNT_CHANNEL_ID
         .messages(&ctx.http, GetMessages::new().limit(1))
         .await
         .unwrap();
@@ -84,14 +85,19 @@ async fn update_faction_counter(ctx: Context, ready: Ready) {
     if most_recent_message_in_faction_counter_channel.len() > 0
         && most_recent_message_in_faction_counter_channel[0].author.id == bot_id
     {
-        println!("Message Exists");
+        // Edits the message embed if it exists
         let message_id = most_recent_message_in_faction_counter_channel[0].id;
-        if let Err(error) = channel_id
+        if let Err(error) = FACTION_COUNT_CHANNEL_ID
             .edit_message(
                 &ctx.http,
                 message_id,
                 EditMessage::new().embed(
-                    FactionMemberCounter::create_faction_counter_embed(&ctx, guild_id).await,
+                    FactionMemberCounter::create_faction_counter_embed(
+                        &ctx,
+                        guild_id,
+                        ROLES_TO_KEEP_TRACK_OF,
+                    )
+                    .await,
                 ),
             )
             .await
@@ -99,12 +105,17 @@ async fn update_faction_counter(ctx: Context, ready: Ready) {
             eprintln!("Failed to edit faction counter message: {error}");
         }
     } else {
-        println!("Message does not exist");
-        if let Err(error) = channel_id
+        // Posts a new message with an embed if it dosen't already exist
+        if let Err(error) = FACTION_COUNT_CHANNEL_ID
             .send_message(
                 &ctx.http,
                 CreateMessage::new().embed(
-                    FactionMemberCounter::create_faction_counter_embed(&ctx, guild_id).await,
+                    FactionMemberCounter::create_faction_counter_embed(
+                        &ctx,
+                        guild_id,
+                        ROLES_TO_KEEP_TRACK_OF,
+                    )
+                    .await,
                 ),
             )
             .await

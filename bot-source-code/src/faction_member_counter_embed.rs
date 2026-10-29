@@ -1,7 +1,6 @@
 // ----- Serenity Imports -----
-use serenity::all::{Context, GuildId, Timestamp};
-use serenity::builder::{CreateEmbed, CreateMessage};
-use serenity::model::timestamp;
+use serenity::all::{Context, GuildId, RoleId, Timestamp};
+use serenity::builder::CreateEmbed;
 
 // ----- Rust Imports -----
 
@@ -16,8 +15,13 @@ pub struct FactionMemberCounter;
 
 impl FactionMemberCounter {
     /// Gatheres the data for, and then creates the faction member counter
-    pub async fn create_faction_counter_embed(ctx: &Context, guild_id: GuildId) -> CreateEmbed {
-        let role_count = DiscordAPIRequests::get_member_counts(&ctx, guild_id).await;
+    pub async fn create_faction_counter_embed(
+        ctx: &Context,
+        guild_id: GuildId,
+        roles_to_track: &[&RoleId],
+    ) -> CreateEmbed {
+        let role_count =
+            DiscordAPIRequests::get_member_counts(&ctx, guild_id, roles_to_track).await;
 
         let mut embed_description: String = String::new();
 

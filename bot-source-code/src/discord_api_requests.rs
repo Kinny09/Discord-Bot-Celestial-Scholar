@@ -15,6 +15,7 @@ impl DiscordAPIRequests {
     pub async fn get_member_counts(
         ctx: &Context,
         guild_id: GuildId,
+        roles_to_track: &[&RoleId],
     ) -> HashMap<RoleId, (String, usize)> {
         let mut role_counts: HashMap<RoleId, (String, usize)> = HashMap::new();
 
@@ -38,17 +39,20 @@ impl DiscordAPIRequests {
 
         // Initialize every role with a count of zero.
         for role in guild.roles {
-            // println!("{:?}", role);
-            role_counts.insert(role.0, (role.1.name, 0));
+            if roles_to_track.contains(&&role.0) {
+                role_counts.insert(role.0, (role.1.name, 0));
+            }
         }
 
         // Count assigned roles.
         for member in &members {
             for role_id in member.roles.clone() {
-                let values_of_entry = role_counts.get(&role_id);
-                let role_name = values_of_entry.unwrap().0.clone();
-                let role_count = values_of_entry.unwrap().1.clone();
-                role_counts.insert(role_id, (role_name, role_count + 1));
+                if roles_to_track.contains(&&role_id) {
+                    let values_of_entry = role_counts.get(&role_id);
+                    let role_name = values_of_entry.unwrap().0.clone();
+                    let role_count = values_of_entry.unwrap().1.clone();
+                    role_counts.insert(role_id, (role_name, role_count + 1));
+                }
             }
         }
 
