@@ -28,9 +28,9 @@ const FACTION_COUNTER_UPDATE_INTERVAL_HOURS: u64 = 5;
 // Member joining/leaving
 const CHANNEL_TO_SEND_JOIN_MESSAGES_TO: ChannelId = ChannelId::new(1565403260435566713);
 const CHANNEL_TO_SEND_LEAVE_MESSAGES_TO: ChannelId = ChannelId::new(1565403449502339153);
-// const JOIN_MESSAGE: &'static str =
-//     "Welcome {user_joined_mention} to Cosmoteer: The Celestial Throne, a RP/RTS server combination";
-// Maybe use replace() to set up the ability to edit the leave/join message in the config
+const JOIN_MESSAGE: &'static str = "Welcome {user_joined_mention} ({username}) to Cosmoteer: The Celestial Throne, a RP/RTS server combination.";
+const LEAVE_MESSAGE: &'static str =
+    "Goodbye {user_joined_mention} ({username}) it was nice knowing you.";
 
 // ---------------------------------------
 // ---------- The event handler ----------
@@ -50,11 +50,9 @@ impl EventHandler for Handler {
 
     /// Posts a joining message when a user joins the discord
     async fn guild_member_addition(&self, ctx: Context, new_member: Member) {
-        let join_message = format!(
-            "Welcome {user_joined_mention} ({username}) to Cosmoteer: The Celestial Throne, a RP/RTS server combination.",
-            user_joined_mention = Mention::from(new_member.user.id),
-            username = new_member.user.name
-        );
+        let mut join_message =
+            JOIN_MESSAGE.replace("{user_joined_mention}", &new_member.user.to_string());
+        join_message = join_message.replace("{username}", &new_member.user.name);
 
         if let Err(why) = CHANNEL_TO_SEND_JOIN_MESSAGES_TO
             .send_message(&ctx.http, CreateMessage::new().content(join_message))
@@ -72,11 +70,8 @@ impl EventHandler for Handler {
         user: User,
         _member_data_if_available: Option<Member>,
     ) {
-        let leave_message = format!(
-            "Goodbye {user_joined_mention} ({username}) it was nice knowing you.",
-            user_joined_mention = Mention::from(user.id),
-            username = user.name
-        );
+        let mut leave_message = LEAVE_MESSAGE.replace("{user_joined_mention}", &user.to_string());
+        leave_message = leave_message.replace("{username}", &user.name);
 
         if let Err(why) = CHANNEL_TO_SEND_LEAVE_MESSAGES_TO
             .send_message(&ctx.http, CreateMessage::new().content(leave_message))
