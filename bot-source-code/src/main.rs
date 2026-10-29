@@ -3,10 +3,8 @@ use dotenv::dotenv;
 use std::env;
 
 // ----- Serenity Imports -----
-// use serenity::all::{Channel, GatewayIntents};
 use serenity::all::{
-    ChannelId, Context, CreateMessage, GatewayIntents, GuildId, Member, Mention, Ready, RoleId,
-    User,
+    ChannelId, Context, CreateMessage, GatewayIntents, GuildId, Member, Ready, RoleId, User,
 };
 use serenity::async_trait;
 use serenity::prelude::*;
