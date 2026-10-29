@@ -7,6 +7,7 @@ use serenity::all::GatewayIntents;
 use serenity::all::{ChannelId, Context, Ready, RoleId};
 use serenity::async_trait;
 use serenity::prelude::*;
+use tokio::time;
 
 // ----- Internal Imports -----
 mod faction_member_counter;
@@ -18,6 +19,7 @@ use faction_member_counter::FactionMemberCounter;
 // For now these are constants for debugging, but eventually all these variables will be imported from a .config file
 const FACTION_COUNT_CHANNEL_ID: ChannelId = ChannelId::new(1564657237023129650);
 const ROLES_TO_KEEP_TRACK_OF: &[&RoleId] = &[&RoleId::new(1565349971035693216)];
+const FACTION_COUNTER_UPDATE_INTERVAL_HOURS: u64 = 5;
 
 // ---------------------------------------
 // ---------- The event handler ----------
@@ -35,13 +37,20 @@ impl EventHandler for Handler {
     // }
 
     async fn ready(&self, ctx: Context, ready: Ready) {
-        FactionMemberCounter::update_faction_counter(
-            ctx,
-            ready,
-            FACTION_COUNT_CHANNEL_ID,
-            ROLES_TO_KEEP_TRACK_OF,
-        )
-        .await;
+        let mut faction_counter_update_interval = time::interval(time::Duration::from_hours(
+            FACTION_COUNTER_UPDATE_INTERVAL_HOURS,
+        ));
+
+        loop {
+            faction_counter_update_interval.tick().await;
+            FactionMemberCounter::update_faction_counter(
+                ctx.clone(),
+                ready.clone(),
+                FACTION_COUNT_CHANNEL_ID,
+                ROLES_TO_KEEP_TRACK_OF,
+            )
+            .await;
+        }
     }
 }
 
