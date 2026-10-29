@@ -15,7 +15,7 @@ pub struct FactionMemberCounter;
 
 impl FactionMemberCounter {
     /// Gatheres the data for, and then creates theCreates the faction member counter
-    pub async fn create_faction_counter_embed(ctx: &Context, guild_id: GuildId) -> CreateMessage {
+    pub async fn create_faction_counter_embed(ctx: &Context, guild_id: GuildId) -> CreateEmbed {
         let role_count = DiscordAPIRequests::get_member_counts(&ctx, guild_id).await;
 
         let mut embed_description: String = String::new();
@@ -29,6 +29,6 @@ impl FactionMemberCounter {
             .title("Current Faction Playercounts")
             .description(embed_description);
 
-        return CreateMessage::new().embed(embed);
+        return embed;
     }
 }
