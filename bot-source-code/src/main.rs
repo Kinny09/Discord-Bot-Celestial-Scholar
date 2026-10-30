@@ -4,7 +4,8 @@ use std::env;
 
 // ----- Serenity Imports -----
 use serenity::all::{
-    ChannelId, Context, CreateMessage, GatewayIntents, GuildId, Member, Ready, RoleId, User,
+    ChannelId, Context, CreateMessage, GatewayIntents, GuildId, Member, Message, Ready, RoleId,
+    User,
 };
 use serenity::async_trait;
 use serenity::prelude::*;
@@ -37,6 +38,16 @@ struct Handler;
 
 #[async_trait]
 impl EventHandler for Handler {
+    async fn message(&self, ctx: Context, msg: Message) {
+        let bot_id = ctx.cache.current_user().id;
+
+        if msg.mentions_user_id(bot_id) {
+            if let Err(why) = msg.channel_id.say(&ctx.http, "Lore Snippet").await {
+                eprintln!("Error sending lore snippet: {why:?}");
+            }
+        }
+    }
+
     // async fn message(&self, ctx: Context, msg: Message) {
     //     if msg.content == "!ping" {
     //         if let Err(why) = msg.channel_id.say(&ctx.http, "Pong!").await {
