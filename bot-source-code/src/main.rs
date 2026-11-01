@@ -55,7 +55,7 @@ impl Handler {
             self.last_time_lore_snippet_was_posted
                 .lock()
                 .await
-                .add(time::Duration::from_secs(
+                .add(time::Duration::from_mins(
                     LORE_SNIPPET_COOLDOWN_TIME_MINUTES,
                 ));
 
