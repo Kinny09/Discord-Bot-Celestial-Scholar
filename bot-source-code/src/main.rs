@@ -1,9 +1,7 @@
 // ----- Library Imports -----
-use chrono::{DateTime, Local, TimeZone};
 use dotenv::dotenv;
 use rand::Rng;
 use std::env;
-use std::fs;
 use std::ops::Add;
 
 // ----- Serenity Imports -----
