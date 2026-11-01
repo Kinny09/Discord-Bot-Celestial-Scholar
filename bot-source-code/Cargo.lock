@@ -81,6 +81,9 @@ name = "bot-source-code"
 version = "0.1.0"
 dependencies = [
  "dotenv",
+ "rand 0.8.8",
+ "serde",
+ "serde_json",
  "serenity",
  "tokio",
 ]
