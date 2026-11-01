@@ -47,7 +47,9 @@ struct Handler {
     last_time_lore_snippet_was_posted: Mutex<Timestamp>,
 }
 
+/// An implementation of the Handler that contains some functions the bot needs
 impl Handler {
+    /// Checks if the current time has or hasn't passed the cooldown time. If it hasn't, it returns true, if it has, it returns false.
     async fn is_lore_snippet_on_cooldown(&self) -> bool {
         let when_cooldown_ends =
             self.last_time_lore_snippet_was_posted
@@ -64,6 +66,7 @@ impl Handler {
     }
 }
 
+/// Code for all the serenity specific events
 #[async_trait]
 impl EventHandler for Handler {
     /// Posts a lore snippet when someone @'s the bot
