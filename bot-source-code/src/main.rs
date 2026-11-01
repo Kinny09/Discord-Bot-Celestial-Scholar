@@ -1,6 +1,8 @@
 // ----- Library Imports -----
 use dotenv::dotenv;
+use rand::Rng;
 use std::env;
+use std::fs;
 
 // ----- Serenity Imports -----
 use serenity::all::{
@@ -14,11 +16,15 @@ use tokio::time;
 // ----- Internal Imports -----
 mod faction_member_counter;
 use faction_member_counter::FactionMemberCounter;
+mod lore_snippet_importer;
 
 // -------------------------------
 // ---------- Constants ----------
 // -------------------------------
 // For now these are constants for debugging, but eventually all these variables will be imported from a .config file
+// lore_snippets json path
+const LORE_SNIPPET_JSON_PATH: &'static str = "lore-snippets.json";
+
 // Faction counting
 const FACTION_COUNT_CHANNEL_ID: ChannelId = ChannelId::new(1564657237023129650);
 const ROLES_TO_KEEP_TRACK_OF: &[&RoleId] = &[&RoleId::new(1565349971035693216)];
@@ -38,24 +44,24 @@ struct Handler;
 
 #[async_trait]
 impl EventHandler for Handler {
+    /// Posts a lore snippet when someone @'s the bot
     async fn message(&self, ctx: Context, msg: Message) {
         let bot_id = ctx.cache.current_user().id;
 
         if msg.mentions_user_id(bot_id) {
-            if let Err(why) = msg.channel_id.say(&ctx.http, "Lore Snippet").await {
+            let lore_snippets: Vec<String> =
+                lore_snippet_importer::read_lore_snippet_json(LORE_SNIPPET_JSON_PATH)
+                    .await
+                    .unwrap();
+
+            let random_snippet_index = rand::thread_rng().gen_range(0..lore_snippets.len());
+            let random_snippet: String = lore_snippets[random_snippet_index].clone();
+
+            if let Err(why) = msg.channel_id.say(&ctx.http, random_snippet).await {
                 eprintln!("Error sending lore snippet: {why:?}");
             }
         }
     }
-
-    // async fn message(&self, ctx: Context, msg: Message) {
-    //     if msg.content == "!ping" {
-    //         if let Err(why) = msg.channel_id.say(&ctx.http, "Pong!").await {
-    //             println!("Error sending message: {why:?}");
-    //         }
-    //     }
-    // }
-    //
 
     /// Posts a joining message when a user joins the discord
     async fn guild_member_addition(&self, ctx: Context, new_member: Member) {
