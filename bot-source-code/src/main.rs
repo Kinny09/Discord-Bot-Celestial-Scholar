@@ -1,8 +1,9 @@
 // ----- Library Imports -----
+use chrono::{DateTime, Utc};
 use dotenv::dotenv;
 use rand::Rng;
 use std::env;
-use std::ops::Add;
+use std::ops::{Add, AddAssign};
 
 // ----- Serenity Imports -----
 use serenity::all::{
@@ -25,7 +26,7 @@ mod lore_snippet_importer;
 // For now these are constants for debugging, but eventually all these variables will be imported from a .config file
 // lore_snippets
 const LORE_SNIPPET_JSON_PATH: &'static str = "lore-snippets.json";
-const LORE_SNIPPET_COOLDOWN_TIME_MINUTES: u64 = 5;
+const LORE_SNIPPET_COOLDOWN_TIME_MINUTES: i64 = 5;
 const LORE_SNIPPET_COOLDOWN_MESSAGE: &'static str =
     "Please be patient {mention_user}, I'm currently going through my notes.";
 
@@ -44,25 +45,34 @@ const LEAVE_MESSAGE: &'static str = "Goodbye {mention_user} ({username}) it was 
 // ---------- The event handler ----------
 // ---------------------------------------
 struct Handler {
-    last_time_lore_snippet_was_posted: Mutex<Timestamp>,
+    last_time_lore_snippet_was_posted: Mutex<DateTime<Utc>>,
 }
 
 /// An implementation of the Handler that contains some functions the bot needs
 impl Handler {
     /// Checks if the current time has or hasn't passed the cooldown time. If it hasn't, it returns true, if it has, it returns false.
     async fn is_lore_snippet_on_cooldown(&self) -> bool {
-        let when_cooldown_ends =
-            self.last_time_lore_snippet_was_posted
-                .lock()
-                .await
-                .add(time::Duration::from_mins(
-                    LORE_SNIPPET_COOLDOWN_TIME_MINUTES,
-                ));
+        let when_cooldown_ends = self.last_time_lore_snippet_was_posted.lock().await.to_utc()
+            + chrono::Duration::minutes(LORE_SNIPPET_COOLDOWN_TIME_MINUTES);
 
         if when_cooldown_ends < Timestamp::now().to_utc() {
             return true;
         }
         return false;
+    }
+
+    async fn format_message(message_to_format: &String, user: User) -> String {
+        let mut formatted_message: String = message_to_format.clone();
+
+        if message_to_format.contains("{mention_user}") {
+            formatted_message = message_to_format.replace("{mention_user}", &user.to_string());
+        }
+
+        if message_to_format.contains("{username}") {
+            formatted_message = formatted_message.replace("{username}", &user.name);
+        }
+
+        return formatted_message;
     }
 }
 
@@ -86,10 +96,14 @@ impl EventHandler for Handler {
                 if let Err(why) = msg.channel_id.say(&ctx.http, random_snippet).await {
                     eprintln!("Error sending lore snippet: {why:?}");
                 }
-                *self.last_time_lore_snippet_was_posted.lock().await = Timestamp::now();
+                *self.last_time_lore_snippet_was_posted.lock().await = Timestamp::now().to_utc();
             } else {
-                let cooldown_message = LORE_SNIPPET_COOLDOWN_MESSAGE
-                    .replace("{mention_user}", &msg.author.to_string());
+                let cooldown_message =
+                    Self::format_message(&LORE_SNIPPET_COOLDOWN_MESSAGE.to_string(), msg.author)
+                        .await;
+
+                // let cooldown_message = LORE_SNIPPET_COOLDOWN_MESSAGE
+                //     .replace("{mention_user}", &msg.author.to_string());
 
                 if let Err(why) = msg.channel_id.say(&ctx.http, cooldown_message).await {
                     eprintln!("Error sending lore snippet cooldown message: {why:?}");
@@ -100,8 +114,7 @@ impl EventHandler for Handler {
 
     /// Posts a joining message when a user joins the discord
     async fn guild_member_addition(&self, ctx: Context, new_member: Member) {
-        let mut join_message = JOIN_MESSAGE.replace("{mention_user}", &new_member.user.to_string());
-        join_message = join_message.replace("{username}", &new_member.user.name);
+        let join_message = Self::format_message(&JOIN_MESSAGE.to_string(), new_member.user).await;
 
         if let Err(why) = CHANNEL_TO_SEND_JOIN_MESSAGES_TO
             .send_message(&ctx.http, CreateMessage::new().content(join_message))
@@ -119,8 +132,7 @@ impl EventHandler for Handler {
         user: User,
         _member_data_if_available: Option<Member>,
     ) {
-        let mut leave_message = LEAVE_MESSAGE.replace("{mention_user}", &user.to_string());
-        leave_message = leave_message.replace("{username}", &user.name);
+        let leave_message = Self::format_message(&LEAVE_MESSAGE.to_string(), user).await;
 
         if let Err(why) = CHANNEL_TO_SEND_LEAVE_MESSAGES_TO
             .send_message(&ctx.http, CreateMessage::new().content(leave_message))
@@ -168,7 +180,10 @@ async fn main() {
     // Create a new instance of the Client, logging in as a bot.
     let mut client = Client::builder(&token, intents)
         .event_handler(Handler {
-            last_time_lore_snippet_was_posted: Mutex::new(Timestamp::now()),
+            last_time_lore_snippet_was_posted: Mutex::new(
+                Timestamp::now().to_utc()
+                    - chrono::Duration::minutes(LORE_SNIPPET_COOLDOWN_TIME_MINUTES),
+            ),
         })
         .await
         .expect("Err creating client");
