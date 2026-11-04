@@ -3,7 +3,6 @@ use chrono::{DateTime, Utc};
 use dotenv::dotenv;
 use rand::Rng;
 use std::env;
-use std::ops::{Add, AddAssign};
 
 // ----- Serenity Imports -----
 use serenity::all::{
@@ -101,9 +100,6 @@ impl EventHandler for Handler {
                 let cooldown_message =
                     Self::format_message(&LORE_SNIPPET_COOLDOWN_MESSAGE.to_string(), msg.author)
                         .await;
-
-                // let cooldown_message = LORE_SNIPPET_COOLDOWN_MESSAGE
-                //     .replace("{mention_user}", &msg.author.to_string());
 
                 if let Err(why) = msg.channel_id.say(&ctx.http, cooldown_message).await {
                     eprintln!("Error sending lore snippet cooldown message: {why:?}");
