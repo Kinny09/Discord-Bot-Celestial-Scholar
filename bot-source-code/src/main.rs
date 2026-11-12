@@ -24,18 +24,24 @@ mod lore_snippet_importer;
 // ---------- Constants ----------
 // -------------------------------
 // For now these are constants for debugging, but eventually all these variables will be imported from a .config file
-// lore_snippets
+// Lore snippet settings
 const LORE_SNIPPET_JSON_PATH: &'static str = "lore-snippets.json";
 const LORE_SNIPPET_COOLDOWN_TIME_MINUTES: i64 = 5;
 const LORE_SNIPPET_COOLDOWN_MESSAGE: &'static str =
     "Please be patient {mention_user}, I'm currently going through my notes.";
 
-// Faction counting
+// Date settings
+const INTERVAL_BETWEEN_TURNS: u64 = 1;
+const DAYS_PER_TURN: u64 = 25;
+const DAYS_PER_MONTH: u64 = 50;
+const MONTHS_PER_YEAR: u64 = 10;
+
+// Faction counting settings
 const FACTION_COUNT_CHANNEL_ID: ChannelId = ChannelId::new(1564657237023129650);
 const ROLES_TO_KEEP_TRACK_OF: &[&RoleId] = &[&RoleId::new(1565349971035693216)];
 const FACTION_COUNTER_UPDATE_INTERVAL_HOURS: u64 = 5;
 
-// Member joining/leaving
+// Member joining/leaving settings
 const CHANNEL_TO_SEND_JOIN_MESSAGES_TO: ChannelId = ChannelId::new(1565403260435566713);
 const CHANNEL_TO_SEND_LEAVE_MESSAGES_TO: ChannelId = ChannelId::new(1565403449502339153);
 const JOIN_MESSAGE: &'static str = "Welcome {mention_user} ({username}) to Cosmoteer: The Celestial Throne, a RP/RTS server combination.";
