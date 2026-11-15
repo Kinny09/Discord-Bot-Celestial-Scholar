@@ -3,6 +3,7 @@ use chrono::{DateTime, Utc};
 use dotenv::dotenv;
 use rand::Rng;
 use std::env;
+use std::f64::DIGITS;
 
 // ----- Serenity Imports -----
 use serenity::all::{
@@ -15,6 +16,8 @@ use tokio::sync::Mutex;
 use tokio::time;
 
 // ----- Internal Imports -----
+mod custom_structs;
+use custom_structs::custom_date::CustomDate;
 mod faction_member_counter;
 use faction_member_counter::FactionMemberCounter;
 mod live_data_importer_exporter;
@@ -32,9 +35,9 @@ const LORE_SNIPPET_COOLDOWN_MESSAGE: &'static str =
 
 // Date settings
 const INTERVAL_BETWEEN_TURNS: u64 = 1;
-const DAYS_PER_TURN: u64 = 25;
-const DAYS_PER_MONTH: u64 = 50;
-const MONTHS_PER_YEAR: u64 = 10;
+const DAYS_PER_TURN: u32 = 25;
+const DAYS_PER_MONTH: u32 = 50;
+const MONTHS_PER_YEAR: u32 = 10;
 
 // Faction counting settings
 const FACTION_COUNT_CHANNEL_ID: ChannelId = ChannelId::new(1564657237023129650);
@@ -79,6 +82,33 @@ impl Handler {
         }
 
         return formatted_message;
+    }
+
+    /// The loop the handles updating the timer
+    async fn update_faction_counter_loop(ctx: Context, ready: Ready) {
+        let mut faction_counter_update_interval = time::interval(time::Duration::from_hours(
+            FACTION_COUNTER_UPDATE_INTERVAL_HOURS,
+        ));
+
+        loop {
+            faction_counter_update_interval.tick().await;
+            FactionMemberCounter::update_faction_counter(
+                ctx.clone(),
+                ready.clone(),
+                FACTION_COUNT_CHANNEL_ID,
+                ROLES_TO_KEEP_TRACK_OF,
+            )
+            .await;
+        }
+    }
+
+    /// A loop that handles updating the date
+    async fn update_date_loop(ctx: Context, ready: Ready) {
+        let mut date_update_interval = time::interval(time::Duration::from_secs(
+            FACTION_COUNTER_UPDATE_INTERVAL_HOURS,
+        ));
+
+        let _test = CustomDate::new("32/6/0012".to_string(), DAYS_PER_MONTH, MONTHS_PER_YEAR);
     }
 }
 
@@ -147,25 +177,16 @@ impl EventHandler for Handler {
 
     /// Handles the updating of the faction counter at specific intervals
     async fn ready(&self, ctx: Context, ready: Ready) {
-        let mut faction_counter_update_interval = time::interval(time::Duration::from_hours(
-            FACTION_COUNTER_UPDATE_INTERVAL_HOURS,
+        tokio::spawn(Self::update_faction_counter_loop(
+            ctx.clone(),
+            ready.clone(),
         ));
-
-        loop {
-            faction_counter_update_interval.tick().await;
-            FactionMemberCounter::update_faction_counter(
-                ctx.clone(),
-                ready.clone(),
-                FACTION_COUNT_CHANNEL_ID,
-                ROLES_TO_KEEP_TRACK_OF,
-            )
-            .await;
-        }
+        tokio::spawn(Self::update_date_loop(ctx.clone(), ready.clone()));
     }
 }
 
 // ---------------------------------------
-// ---------- The main functiion ---------
+// ---------- The main function ---------
 // ---------------------------------------
 #[tokio::main]
 async fn main() {
