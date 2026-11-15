@@ -55,4 +55,23 @@ impl CustomDate {
             year: year,
         }
     }
+
+    /// Puts together and then returns the date in the format of a string
+    pub fn get_date_as_string() -> String {
+        panic!("Not Implemented")
+    }
+
+    /// Allows the addition of days to the date
+    pub fn add_days() {
+        panic!("Not Implemented")
+    }
+
+    /// Allows the addition of months to the date
+    pub fn add_months() {
+        panic!("Not Implemented")
+    }
+    /// Allows the addition of years to the date
+    pub fn add_years() {
+        panic!("Not Implemented")
+    }
 }
