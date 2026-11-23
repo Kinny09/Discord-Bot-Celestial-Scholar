@@ -4,6 +4,7 @@ use dotenv::dotenv;
 use rand::Rng;
 use std::env;
 use std::f64::DIGITS;
+use std::ops::Deref;
 
 // ----- Serenity Imports -----
 use serenity::all::{
@@ -108,7 +109,11 @@ impl Handler {
             FACTION_COUNTER_UPDATE_INTERVAL_HOURS,
         ));
 
-        let _test = CustomDate::new("32/6/0012".to_string(), DAYS_PER_MONTH, MONTHS_PER_YEAR);
+        let mut test = CustomDate::new("32/6/0012".to_string(), DAYS_PER_MONTH, MONTHS_PER_YEAR);
+        println!("{}", test.get_date_as_string());
+
+        test.add_days(18);
+        println!("{}", test.get_date_as_string());
     }
 }
 
